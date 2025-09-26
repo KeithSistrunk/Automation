@@ -1,0 +1,63 @@
+# Requires -RunAsAdministrator
+
+<#
+.SYNOPSIS
+Downloads and silently installs the latest version of Google Chrome.
+
+.DESCRIPTION
+This script fetches the Chrome installer from the official Google download link,
+saves it to the temporary directory, executes it silently for installation,
+and then removes the installer file.
+
+.NOTES
+Execute this script with administrative privileges (Run As Administrator).
+Requires an active internet connection.
+#>
+
+$DownloadURL = "https://dl.google.com/chrome/install/latest/chrome_installer.exe"
+$TempPath = $env:TEMP
+$InstallerName = "ChromeInstaller.exe"
+$InstallerPath = Join-Path -Path $TempPath -ChildPath $InstallerName
+
+Write-Host "Starting silent installation of Google Chrome..." -ForegroundColor Cyan
+
+try {
+    # -------------------------------------------------------------------------
+    # 1. Download the Chrome Installer
+    # -------------------------------------------------------------------------
+
+    Write-Host "1. Downloading Chrome installer from $DownloadURL to $InstallerPath..." -ForegroundColor Yellow
+    
+    # Use Invoke-WebRequest (alias iwr) to download the file
+    Invoke-WebRequest -Uri $DownloadURL -OutFile $InstallerPath -ErrorAction Stop
+
+    Write-Host "Download complete." -ForegroundColor Green
+
+
+    # -------------------------------------------------------------------------
+    # 2. Execute the Silent Installation
+    # -------------------------------------------------------------------------
+
+    Write-Host "2. Starting silent installation (This may take a minute)..." -ForegroundColor Yellow
+    
+    # Use Start-Process to run the installer silently and wait for it to finish
+    Start-Process -FilePath $InstallerPath -ArgumentList "/silent /install" -NoNewWindow -Wait -ErrorAction Stop
+
+    Write-Host "Installation process finished." -ForegroundColor Green
+
+
+    # -------------------------------------------------------------------------
+    # 3. Cleanup
+    # -------------------------------------------------------------------------
+
+    Write-Host "3. Removing temporary installer file..." -ForegroundColor Yellow
+    
+    Remove-Item -Path $InstallerPath -Force -ErrorAction SilentlyContinue
+
+    Write-Host "Google Chrome has been successfully installed and installer cleaned up." -ForegroundColor Green
+}
+catch {
+    Write-Host "`nAn error occurred during the process:" -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host "Installation failed. Check internet connection and administrator privileges." -ForegroundColor Red
+}
